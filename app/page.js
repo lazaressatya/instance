@@ -11,32 +11,51 @@ export default function Home() {
     department: ""
   });
 
+  const [error, setError] = useState("");
+
   async function getEmployees() {
-    const response = await fetch("/api/employees");
+    try {
+      const res = await fetch("/api/employees");
 
-    const data = await response.json();
+      if (!res.ok) {
+        throw new Error("Unable to fetch employees");
+      }
 
-    setEmployees(data);
+      const data = await res.json();
+
+      setEmployees(data);
+      setError("");
+    } catch (err) {
+      setError(err.message);
+    }
   }
 
   async function addEmployee(e) {
     e.preventDefault();
 
-    await fetch("/api/employees", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(form)
-    });
+    try {
+      const res = await fetch("/api/employees", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(form)
+      });
 
-    setForm({
-      name: "",
-      email: "",
-      department: ""
-    });
+      if (!res.ok) {
+        throw new Error("Unable to add employee");
+      }
 
-    getEmployees();
+      setForm({
+        name: "",
+        email: "",
+        department: ""
+      });
+
+      await getEmployees();
+    } catch (err) {
+      setError(err.message);
+    }
   }
 
   useEffect(() => {
@@ -44,46 +63,41 @@ export default function Home() {
   }, []);
 
   return (
-    <main
-      style={{
-        maxWidth: "800px",
-        margin: "50px auto",
-        fontFamily: "Arial"
-      }}
-    >
-      <h1>Employee Management</h1>
+    <main style={{
+      maxWidth: "700px",
+      margin: "50px auto",
+      fontFamily: "Arial",
+      padding: "20px"
+    }}>
+      <h1>Employee Management System</h1>
 
       <form onSubmit={addEmployee}>
         <input
-          placeholder="Name"
+          placeholder="Employee Name"
+          required
           value={form.name}
           onChange={(e) =>
-            setForm({
-              ...form,
-              name: e.target.value
-            })
+            setForm({ ...form, name: e.target.value })
           }
         />
 
-        <br />
-        <br />
+        <br /><br />
 
         <input
-          placeholder="Email"
+          type="email"
+          placeholder="Employee Email"
+          required
           value={form.email}
           onChange={(e) =>
-            setForm({
-              ...form,
-              email: e.target.value
-            })
+            setForm({ ...form, email: e.target.value })
           }
         />
 
-        <br />
-        <br />
+        <br /><br />
 
         <input
           placeholder="Department"
+          required
           value={form.department}
           onChange={(e) =>
             setForm({
@@ -93,28 +107,24 @@ export default function Home() {
           }
         />
 
-        <br />
-        <br />
+        <br /><br />
 
         <button type="submit">
           Add Employee
         </button>
       </form>
 
+      {error && <p style={{ color: "red" }}>{error}</p>}
+
       <hr />
 
-      <h2>Employees</h2>
+      <h2>Employee List</h2>
 
-      {employees.map((employee) => (
-        <div key={employee._id}>
-          <p>
-            <strong>{employee.name}</strong>
-          </p>
-
-          <p>{employee.email}</p>
-
-          <p>{employee.department}</p>
-
+      {employees.map((emp) => (
+        <div key={emp._id}>
+          <h3>{emp.name}</h3>
+          <p>Email: {emp.email}</p>
+          <p>Department: {emp.department}</p>
           <hr />
         </div>
       ))}
